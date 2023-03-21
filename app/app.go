@@ -56,8 +56,7 @@ func (a *App) SelectShape() (shapes.Shape, error) {
 	fmt.Print("Select a shape (enter 1,2 or 3):\n1. Rectangle\n2. Circle\n3. Triangle\nChoice : ")
 	userInput, err := a.Reader.ReadString('\n')
 	if err != nil {
-		fmt.Println("An error occurred while reading input. Please try again.", err)
-		os.Exit(1)
+		return nil, errors.New("An error occurred while reading input")
 	}
 	shapeSelected := strings.TrimRight(userInput, "\n")
 	switch shapeSelected {
