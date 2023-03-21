@@ -18,14 +18,17 @@ func main() {
 
 	actionSelected := selectShapeAction(reader, shapeSelected)
 
-	shapeDimensions := enterDimensions(reader, shapeSelected)
+	shapeDimensions := selectDimensions(reader, shapeSelected)
 
-	//result := calculateResult(shapeSelected, actionSelected, shapeDimensions) TODO
+	s := buildShape(shapeSelected, shapeDimensions)
 
-	fmt.Printf("shape selected: %T\n", shapeSelected)
-	fmt.Printf("action selected %v\n", actionSelected)
-	fmt.Printf("shape dimensions %v\n", shapeDimensions)
-	//fmt.Printf("The %q is %q\n", actionSelected, result)
+	r, _ := calculateResult(s, actionSelected)
+
+	fmt.Printf("\n\nThe %v of the %T is %v\n\n", actionSelected, shapeSelected, r)
+
+	// fmt.Printf("shape selected: %T\n", shapeSelected)
+	// fmt.Printf("action selected %v\n", actionSelected)
+	// fmt.Printf("shape dimensions %v\n", shapeDimensions)
 }
 
 func selectShape(reader *bufio.Reader) shape.Shape {
@@ -71,14 +74,14 @@ func selectShapeAction(reader *bufio.Reader, s shape.Shape) string {
 	}
 }
 
-func enterDimensions(reader *bufio.Reader, s shape.Shape) shapeData {
+func selectDimensions(reader *bufio.Reader, s shape.Shape) shapeData {
 	fields := _struct.GetFields(s)
 	var userInput string
 	var userInputVal float64
 	var err error
-	paramsMap := map[string]float64{}
+	dimensions := map[string]float64{}
 	for _, param := range fields {
-		fmt.Printf("Enter %q : ", param)
+		fmt.Printf("Enter %v : ", param)
 		userInput, err = reader.ReadString('\n')
 		if err != nil {
 			fmt.Println("An error occurred while reading input. Please try again.")
@@ -88,18 +91,52 @@ func enterDimensions(reader *bufio.Reader, s shape.Shape) shapeData {
 		userInputVal, err = strconv.ParseFloat(userInput, 64)
 		if err != nil {
 			fmt.Println("You must enter a number. Please try again.")
-			return enterDimensions(reader, s)
+			return selectDimensions(reader, s)
 		}
-		paramsMap[param] = userInputVal
+		dimensions[param] = userInputVal
 	}
-	return paramsMap
+	return dimensions
+}
+ 
+func buildShape(s shape.Shape, d shapeData) shape.Shape {
+	switch s.(type) {
+	case *shapes.Rectangle:
+		r := s.(*shapes.Rectangle)
+		r.Width = d["Width"]
+		r.Height = d["Height"]
+		return r
+	case *shapes.Circle:
+		c := s.(*shapes.Circle)
+		c.Radius = d["Radius"]
+		return c
+	case *shapes.Triangle:
+		t := s.(*shapes.Triangle)
+		t.Height = d["Height"]
+		t.Base = d["Base"]
+		return t
+	default:
+		fmt.Println("Invalid shape type.")
+		return nil
+	}
 }
 
-// TODO
-//func calculateResult(s shape.Shape, a string, p shapeData) float64 {
-//	if a == "Area" {
-//		return s{}.Area()
-//	}
-//}
+func calculateResult(s shape.Shape, a string) (float64, error) {
+	switch a {
+	case "Area":
+		result, err := s.Area()
+		if err != nil {
+			return 0, err
+		}
+		return result, nil
+	case "Perimeter":
+		result, err := s.Perimeter()
+		if err != nil {
+			return 0, err
+		}
+		return result, nil
+	default:
+		return 0, nil
+	}
+}
 
 type shapeData map[string]float64
