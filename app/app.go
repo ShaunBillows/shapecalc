@@ -13,6 +13,7 @@ import (
 
 const (
 	ErrInvalidInput = "Invalid input. Please try again."
+	ErrReadingInput = "An error occurred while reading input"
 )
 
 type App struct {
@@ -56,7 +57,7 @@ func (a *App) SelectShape() (shapes.Shape, error) {
 	fmt.Print("Select a shape (enter 1,2 or 3):\n1. Rectangle\n2. Circle\n3. Triangle\nChoice : ")
 	userInput, err := a.Reader.ReadString('\n')
 	if err != nil {
-		return nil, errors.New("An error occurred while reading input")
+		return nil, errors.New(ErrReadingInput)
 	}
 	shapeSelected := strings.TrimRight(userInput, "\n")
 	switch shapeSelected {
