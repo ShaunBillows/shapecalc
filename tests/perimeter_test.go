@@ -1,16 +1,15 @@
 package tests
 
 import (
+	"github.com/ShaunBillows/shapes-cli-project-go/app/shapes"
 	"github.com/ShaunBillows/shapes-cli-project-go/internal/messages"
-	"github.com/ShaunBillows/shapes-cli-project-go/internal/shape"
-	"github.com/ShaunBillows/shapes-cli-project-go/internal/shape/shapes"
 	"testing"
 )
 
 func TestPerimeter(t *testing.T) {
 	perimeterTests := []struct {
 		name         string
-		shape        shape.Shape
+		shape        shapes.Shape
 		hasPerimeter float64
 		err          error
 	}{

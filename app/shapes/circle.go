@@ -26,3 +26,7 @@ func (c Circle) Perimeter() (float64, error) {
 	}
 	return 2 * math.Pi * c.Radius, nil
 }
+
+func (r Circle) Type() ShapeType {
+	return ShapeTypeCircle
+}

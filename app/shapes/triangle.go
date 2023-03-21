@@ -33,3 +33,7 @@ func (t Triangle) Perimeter() (float64, error) {
 	}
 	return 2*math.Sqrt(t.Height*t.Height+math.Pow(t.Base/2, 2)) + t.Base, nil
 }
+
+func (r Triangle) Type() ShapeType {
+	return ShapeTypeTriangle
+}

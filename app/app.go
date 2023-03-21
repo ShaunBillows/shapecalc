@@ -1,61 +1,80 @@
-package main
+package app
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
-	"github.com/ShaunBillows/shapes-cli-project-go/internal/shape"
-	"github.com/ShaunBillows/shapes-cli-project-go/internal/shape/shapes"
+	"github.com/ShaunBillows/shapes-cli-project-go/app/shapes"
 	_struct "github.com/ShaunBillows/shapes-cli-project-go/internal/struct"
 	"os"
 	"strconv"
 	"strings"
 )
 
-func main() {
-	reader := bufio.NewReader(os.Stdin)
+const (
+	ErrInvalidInput = "Invalid input. Please try again."
+)
 
-	shapeSelected := selectShape(reader)
-
-	actionSelected := selectShapeAction(reader, shapeSelected)
-
-	shapeDimensions := selectDimensions(reader, shapeSelected)
-
-	s := buildShape(shapeSelected, shapeDimensions)
-
-	r, _ := calculateResult(s, actionSelected)
-
-	fmt.Printf("\n\nThe %v of the %T is %v\n\n", actionSelected, shapeSelected, r)
-
-	// fmt.Printf("shape selected: %T\n", shapeSelected)
-	// fmt.Printf("action selected %v\n", actionSelected)
-	// fmt.Printf("shape dimensions %v\n", shapeDimensions)
+type App struct {
+	Reader StringReader
 }
 
-func selectShape(reader *bufio.Reader) shape.Shape {
+func NewApp() *App {
+	reader := bufio.NewReader(os.Stdin)
+	return &App{
+		Reader: reader,
+	}
+}
+
+func (a *App) Run() {
+
+	var shapeSelected shapes.Shape
+	var err error
+	for {
+		shapeSelected, err = a.SelectShape()
+		if shapeSelected != nil {
+			break
+		}
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	actionSelected := a.selectShapeAction(shapeSelected)
+
+	shapeDimensions := a.selectDimensions(shapeSelected)
+
+	s := a.buildShape(shapeSelected, shapeDimensions)
+
+	r, _ := a.calculateResult(s, actionSelected)
+
+	fmt.Printf("\n\nThe %v of the %T is %v\n\n", actionSelected, shapeSelected, r)
+}
+
+func (a *App) SelectShape() (shapes.Shape, error) {
+
 	fmt.Print("Select a shape (enter 1,2 or 3):\n1. Rectangle\n2. Circle\n3. Triangle\nChoice : ")
-	userInput, err := reader.ReadString('\n')
+	userInput, err := a.Reader.ReadString('\n')
 	if err != nil {
-		fmt.Println("An error occurred while reading input. Please try again.")
+		fmt.Println("An error occurred while reading input. Please try again.", err)
 		os.Exit(1)
 	}
 	shapeSelected := strings.TrimRight(userInput, "\n")
 	switch shapeSelected {
 	case "1":
-		fmt.Println("You have selected a rectangle.")
-		return shapes.NewRectangle()
+		return shapes.NewRectangle(), nil
 	case "2":
-		fmt.Println("You have selected a circle.")
-		return shapes.NewCircle()
+		return shapes.NewCircle(), nil
 	case "3":
-		fmt.Println("You have selected a triangle.")
-		return shapes.NewTriangle()
+		return shapes.NewTriangle(), nil
 	default:
 		fmt.Println("Invalid input. Please try again.")
-		return selectShape(reader)
+		return nil, errors.New(ErrInvalidInput)
 	}
 }
 
-func selectShapeAction(reader *bufio.Reader, s shape.Shape) string {
+func (a *App) selectShapeAction(s shapes.Shape) string {
+	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Which operation would you like to perform? (enter 1 or 2):\n1. Calculate area\n2. Calculate perimeter\nChoice : ")
 	userInput, err := reader.ReadString('\n')
 	if err != nil {
@@ -70,11 +89,12 @@ func selectShapeAction(reader *bufio.Reader, s shape.Shape) string {
 		return "Perimeter"
 	default:
 		fmt.Println("Invalid input. Please try again.")
-		return selectShapeAction(reader, s)
+		return a.selectShapeAction(s)
 	}
 }
 
-func selectDimensions(reader *bufio.Reader, s shape.Shape) shapeData {
+func (a *App) selectDimensions(s shapes.Shape) shapeData {
+	reader := bufio.NewReader(os.Stdin)
 	fields := _struct.GetFields(s)
 	var userInput string
 	var userInputVal float64
@@ -91,14 +111,14 @@ func selectDimensions(reader *bufio.Reader, s shape.Shape) shapeData {
 		userInputVal, err = strconv.ParseFloat(userInput, 64)
 		if err != nil {
 			fmt.Println("You must enter a number. Please try again.")
-			return selectDimensions(reader, s)
+			return a.selectDimensions(s)
 		}
 		dimensions[param] = userInputVal
 	}
 	return dimensions
 }
- 
-func buildShape(s shape.Shape, d shapeData) shape.Shape {
+
+func (a *App) buildShape(s shapes.Shape, d shapeData) shapes.Shape {
 	switch s.(type) {
 	case *shapes.Rectangle:
 		r := s.(*shapes.Rectangle)
@@ -120,8 +140,8 @@ func buildShape(s shape.Shape, d shapeData) shape.Shape {
 	}
 }
 
-func calculateResult(s shape.Shape, a string) (float64, error) {
-	switch a {
+func (a *App) calculateResult(s shapes.Shape, action string) (float64, error) {
+	switch action {
 	case "Area":
 		result, err := s.Area()
 		if err != nil {

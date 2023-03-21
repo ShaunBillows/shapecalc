@@ -32,3 +32,7 @@ func (r Rectangle) Perimeter() (float64, error) {
 	}
 	return 2*r.Height + 2*r.Width, nil
 }
+
+func (r Rectangle) Type() ShapeType {
+	return ShapeTypeRectangle
+}
