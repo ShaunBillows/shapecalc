@@ -1,7 +1,7 @@
 package shapes
 
 import (
-	"github.com/ShaunBillows/shapes-cli-project-go/internal/messages"
+	"errors"
 	"math"
 )
 
@@ -16,20 +16,20 @@ func NewTriangle() *Triangle {
 
 func (t Triangle) Area() (float64, error) {
 	if t.Height < 0 {
-		return 0, messages.ErrNegativeHeight
+		return 0, errors.New(ErrNegativeHeight)
 	}
 	if t.Base < 0 {
-		return 0, messages.ErrNegativeBase
+		return 0, errors.New(ErrNegativeBase)
 	}
 	return 0.5 * t.Base * t.Height, nil
 }
 
 func (t Triangle) Perimeter() (float64, error) {
 	if t.Height < 0 {
-		return 0, messages.ErrNegativeHeight
+		return 0, errors.New(ErrNegativeHeight)
 	}
 	if t.Base < 0 {
-		return 0, messages.ErrNegativeBase
+		return 0, errors.New(ErrNegativeBase)
 	}
 	return 2*math.Sqrt(t.Height*t.Height+math.Pow(t.Base/2, 2)) + t.Base, nil
 }

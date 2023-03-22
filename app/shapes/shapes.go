@@ -6,6 +6,11 @@ const (
 	ShapeTypeRectangle ShapeType = "Rectangle"
 	ShapeTypeTriangle  ShapeType = "Triangle"
 	ShapeTypeCircle    ShapeType = "Circle"
+
+	ErrNegativeRadius = "radius cannot be negative"
+	ErrNegativeWidth  = "width cannot be negative"
+	ErrNegativeHeight = "height cannot be negative"
+	ErrNegativeBase   = "base cannot be negative"
 )
 
 type Shape interface {

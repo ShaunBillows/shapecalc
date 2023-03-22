@@ -1,10 +1,10 @@
-package _struct
+package app
 
 import (
 	"reflect"
 )
 
-func GetFields(s interface{}) []string {
+func (a *App) GetFields(s interface{}) []string {
 	v := reflect.ValueOf(s)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()

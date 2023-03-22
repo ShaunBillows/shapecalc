@@ -5,10 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ShaunBillows/shapes-cli-project-go/app/shapes"
-	_struct "github.com/ShaunBillows/shapes-cli-project-go/internal/struct"
+	"log"
 	"os"
 	"strconv"
-	"strings"
 )
 
 const (
@@ -28,119 +27,111 @@ func NewApp() *App {
 }
 
 func (a *App) Run() {
-
-	var shapeSelected shapes.Shape
 	var err error
-	for {
-		shapeSelected, err = a.SelectShape()
-		if shapeSelected != nil {
-			break
-		}
-		if err != nil {
-			fmt.Println(err)
+	// Define prompts for shape and shape action
+	prompts := []struct {
+		id       string
+		prompt   string
+		options  []string
+		response string
+	}{
+		{
+			id:      "shape",
+			prompt:  "Select a shape (enter 1, 2 or 3):",
+			options: []string{"Rectangle", "Circle", "Triangle"},
+		},
+		{
+			id:      "action",
+			prompt:  "\nWhich operation would you like to perform? (enter 1 or 2): ",
+			options: []string{"Area", "Perimeter"},
+		},
+	}
+	// Prompt the user for a shape and shape action
+	for i, p := range prompts {
+		for {
+			response, err := a.GetUserChoice(p.prompt, p.options)
+			if response != "" {
+				prompts[i].response = response
+				break
+			}
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
-
-	actionSelected := a.selectShapeAction(shapeSelected)
-
-	shapeDimensions := a.selectDimensions(shapeSelected)
-
-	s := a.buildShape(shapeSelected, shapeDimensions)
-
-	r, _ := a.calculateResult(s, actionSelected)
-
-	fmt.Printf("\n\nThe %v of the %T is %v\n\n", actionSelected, shapeSelected, r)
+	// Create the user's shape
+	var shapeSelected shapes.Shape
+	shapeSelected, err = a.CreateShape(prompts[0].response)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Prompt the user for the shape's dimensions
+	fmt.Print("\nEnter the dimensions below.\n\n")
+	params := a.GetFields(shapeSelected)
+	paramValues := ShapeData{}
+	for _, param := range params {
+		paramStr, err := a.GetUserData(param)
+		if err != nil {
+			log.Fatal(err)
+		}
+		paramValue, err := strconv.ParseFloat(paramStr, 64)
+		if err != nil {
+			fmt.Println("Invalid input. You must enter a number.")
+			log.Fatal(err)
+		}
+		paramValues[param] = paramValue
+	}
+	var selectedShape shapes.Shape
+	// Set the user's shape dimensions
+	selectedShape, err = a.BuildShape(shapeSelected, paramValues)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Perform the shape action
+	result, err := a.PerformShapeAction(selectedShape, prompts[1].response)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Display the result
+	fmt.Printf("\n\nThe %v of the %v is %v.\n\n", prompts[1].response, selectedShape.Type(), result)
 }
 
-func (a *App) SelectShape() (shapes.Shape, error) {
-
-	fmt.Print("Select a shape (enter 1,2 or 3):\n1. Rectangle\n2. Circle\n3. Triangle\nChoice : ")
-	userInput, err := a.Reader.ReadString('\n')
-	if err != nil {
-		return nil, errors.New(ErrReadingInput)
-	}
-	shapeSelected := strings.TrimRight(userInput, "\n")
-	switch shapeSelected {
-	case "1":
+func (a *App) CreateShape(shape string) (shapes.Shape, error) {
+	switch shape {
+	case "Rectangle":
 		return shapes.NewRectangle(), nil
-	case "2":
+	case "Circle":
 		return shapes.NewCircle(), nil
-	case "3":
+	case "Triangle":
 		return shapes.NewTriangle(), nil
 	default:
-		fmt.Println("Invalid input. Please try again.")
 		return nil, errors.New(ErrInvalidInput)
 	}
 }
 
-func (a *App) selectShapeAction(s shapes.Shape) string {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Which operation would you like to perform? (enter 1 or 2):\n1. Calculate area\n2. Calculate perimeter\nChoice : ")
-	userInput, err := reader.ReadString('\n')
-	if err != nil {
-		fmt.Println("An error occurred while reading input. Please try again.")
-		os.Exit(1)
-	}
-	actionSelected := strings.TrimRight(userInput, "\n")
-	switch actionSelected {
-	case "1":
-		return "Area"
-	case "2":
-		return "Perimeter"
-	default:
-		fmt.Println("Invalid input. Please try again.")
-		return a.selectShapeAction(s)
-	}
-}
-
-func (a *App) selectDimensions(s shapes.Shape) shapeData {
-	reader := bufio.NewReader(os.Stdin)
-	fields := _struct.GetFields(s)
-	var userInput string
-	var userInputVal float64
-	var err error
-	dimensions := map[string]float64{}
-	for _, param := range fields {
-		fmt.Printf("Enter %v : ", param)
-		userInput, err = reader.ReadString('\n')
-		if err != nil {
-			fmt.Println("An error occurred while reading input. Please try again.")
-			os.Exit(1)
-		}
-		userInput = strings.TrimRight(userInput, "\n")
-		userInputVal, err = strconv.ParseFloat(userInput, 64)
-		if err != nil {
-			fmt.Println("You must enter a number. Please try again.")
-			return a.selectDimensions(s)
-		}
-		dimensions[param] = userInputVal
-	}
-	return dimensions
-}
-
-func (a *App) buildShape(s shapes.Shape, d shapeData) shapes.Shape {
+func (a *App) BuildShape(s shapes.Shape, d ShapeData) (shapes.Shape, error) {
 	switch s.(type) {
 	case *shapes.Rectangle:
 		r := s.(*shapes.Rectangle)
 		r.Width = d["Width"]
 		r.Height = d["Height"]
-		return r
+		return r, nil
 	case *shapes.Circle:
 		c := s.(*shapes.Circle)
 		c.Radius = d["Radius"]
-		return c
+		return c, nil
 	case *shapes.Triangle:
 		t := s.(*shapes.Triangle)
 		t.Height = d["Height"]
 		t.Base = d["Base"]
-		return t
+		return t, nil
 	default:
 		fmt.Println("Invalid shape type.")
-		return nil
+		return nil, errors.New(ErrInvalidInput)
 	}
 }
 
-func (a *App) calculateResult(s shapes.Shape, action string) (float64, error) {
+func (a *App) PerformShapeAction(s shapes.Shape, action string) (float64, error) {
 	switch action {
 	case "Area":
 		result, err := s.Area()
@@ -155,8 +146,8 @@ func (a *App) calculateResult(s shapes.Shape, action string) (float64, error) {
 		}
 		return result, nil
 	default:
-		return 0, nil
+		return 0, errors.New(ErrInvalidInput)
 	}
 }
 
-type shapeData map[string]float64
+type ShapeData map[string]float64

@@ -15,64 +15,7 @@ func (r *mockReader) ReadString(delim byte) (string, error) {
 	return r.ReadStringFunc(delim)
 }
 
-func TestApp_SelectShape(t *testing.T) {
-	mr := &mockReader{}
-
-	app := NewApp()
-	app.Reader = mr
-
-	tests := []struct {
-		name          string
-		readerInput   string
-		readerError   error
-		expected      shapes.ShapeType
-		expectedError error
-	}{
-		{
-			name:        "option 1 should return a rectangle",
-			readerInput: "1",
-			expected:    shapes.ShapeTypeRectangle,
-		},
-		{
-			name:        "option 2 should return a circle",
-			readerInput: "2",
-			expected:    shapes.ShapeTypeCircle,
-		},
-		{
-			name:        "option 3 should return a triangle",
-			readerInput: "3",
-			expected:    shapes.ShapeTypeTriangle,
-		},
-		{
-			name:          "should handle errors from stringReader",
-			readerInput:   "4",
-			readerError:   errors.New("Invalid reader input."),
-			expectedError: errors.New(ErrReadingInput),
-		},
-		{
-			name:          "should return an error with incorrect readerInput",
-			readerInput:   "incorrect reader input",
-			expectedError: errors.New(ErrInvalidInput),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			mr.ReadStringFunc = func(delim byte) (string, error) {
-				return tt.readerInput, tt.readerError
-			}
-			selectedShape, err := app.SelectShape()
-			if err != nil {
-				assertEquals(t, tt.expectedError.Error(), err.Error())
-			}
-			if err == nil {
-				assertEquals(t, tt.expected, selectedShape.Type())
-			}
-		})
-	}
-}
-
-func TestInputReader(t *testing.T) {
+func TestApp_GetUserChoice(t *testing.T) {
 	assert := assert.New(t)
 	mr := &mockReader{}
 	app := NewApp()
@@ -88,13 +31,13 @@ func TestInputReader(t *testing.T) {
 		{
 			name:          "should return the selected option",
 			readerInput:   "1",
-			readerOptions: []string{"1", "2", "3"},
+			readerOptions: []string{"Rectangle", "Circle", "Triangle"},
 			readerError:   nil,
-			expected:      "1",
+			expected:      "Rectangle",
 			expectedError: nil,
 		},
 		{
-			name:          "should return an error if the input wasn't an option",
+			name:          "invalid option should return an error",
 			readerInput:   "100",
 			readerOptions: []string{"1", "2", "3"},
 			readerError:   nil,
@@ -115,7 +58,7 @@ func TestInputReader(t *testing.T) {
 			mr.ReadStringFunc = func(delim byte) (string, error) {
 				return tt.readerInput, tt.readerError
 			}
-			got, err := app.InputReader(tt.readerInput, tt.readerOptions)
+			got, err := app.GetUserChoice(tt.readerInput, tt.readerOptions)
 			if err != nil {
 				assert.Equal(tt.expectedError.Error(), err.Error(), tt.name)
 			}
@@ -126,30 +69,230 @@ func TestInputReader(t *testing.T) {
 	}
 }
 
-//func assertNotNil(t testing.TB, got interface{}) {
-//	t.Helper()
-//	if got == nil {
-//		t.Errorf("expected nil got %q", got)
-//	}
-//}
+func TestApp_GetUserData(t *testing.T) {
+	assert := assert.New(t)
+	mr := &mockReader{}
+	app := NewApp()
+	app.Reader = mr
+	tests := []struct {
+		name          string
+		readerInput   string
+		readerData    string
+		readerError   error
+		expected      string
+		expectedError error
+	}{
+		{
+			name:          "should return the user's input",
+			readerInput:   "user's input",
+			readerError:   nil,
+			expected:      "user's input",
+			expectedError: nil,
+		},
+		{
+			name:          "should handle errors from stringReader",
+			readerInput:   "1",
+			readerError:   errors.New("Invalid reader input."),
+			expected:      "1",
+			expectedError: errors.New(ErrReadingInput),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mr.ReadStringFunc = func(delim byte) (string, error) {
+				return tt.readerInput, tt.readerError
+			}
+			got, err := app.GetUserData(tt.readerData)
+			if err != nil {
+				assert.Equal(tt.expectedError.Error(), err.Error(), tt.name)
+			}
+			if err == nil {
+				assert.Equal(tt.expected, got, tt.name)
+			}
+		})
+	}
+}
 
-//func assertError(t testing.TB, name string, expected, got error) {
-//	t.Helper()
-//	if got != expected {
-//		t.Errorf("%#v expected %q got error %q", name, expected, got)
-//	}
-//}
+func TestApp_CreateShape(t *testing.T) {
+	assert := assert.New(t)
+	app := NewApp()
+	tests := []struct {
+		name          string
+		shape         string
+		expected      shapes.Shape
+		expectedError error
+	}{
+		{
+			name:          "should return a circle",
+			shape:         "Circle",
+			expected:      shapes.NewCircle(),
+			expectedError: nil,
+		},
+		{
+			name:          "should return a rectangle",
+			shape:         "Rectangle",
+			expected:      shapes.NewRectangle(),
+			expectedError: nil,
+		},
+		{
+			name:          "should return a triangle",
+			shape:         "Triangle",
+			expected:      shapes.NewTriangle(),
+			expectedError: nil,
+		},
+		{
+			name:          "should return an error",
+			shape:         "Invalid shape",
+			expected:      nil,
+			expectedError: errors.New(ErrInvalidInput),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := app.CreateShape(tt.shape)
+			assert.Equal(tt.expectedError, err, tt.name)
+			assert.Equal(tt.expected, got, tt.name)
+		})
+	}
+}
 
-//func assertFloat64(t testing.TB, name string, expected, got float64) {
-//	t.Helper()
-//	if got != expected {
-//		t.Errorf("%#v  expected %g got %g", name, expected, got)
-//	}
-//}
+func TestApp_BuildShape(t *testing.T) {
+	assert := assert.New(t)
+	app := NewApp()
+	tests := []struct {
+		name          string
+		shape         shapes.Shape
+		shapeData     ShapeData
+		expected      shapes.Shape
+		expectedError error
+	}{
+		{
+			name:  "should return a rectangle",
+			shape: shapes.NewRectangle(),
+			shapeData: ShapeData{
+				"Height": 2,
+				"Width":  2,
+			},
+			expected: &shapes.Rectangle{
+				2,
+				2,
+			},
+			expectedError: nil,
+		},
+		{
+			name:  "should return a circle",
+			shape: shapes.NewCircle(),
+			shapeData: ShapeData{
+				"Radius": 2,
+			},
+			expected: &shapes.Circle{
+				2,
+			},
+			expectedError: nil,
+		},
+		{
+			name:  "should return a triangle",
+			shape: shapes.NewTriangle(),
+			shapeData: ShapeData{
+				"Height": 2,
+				"Base":   2,
+			},
+			expected: &shapes.Triangle{
+				2,
+				2,
+			},
+			expectedError: nil,
+		},
+		{
+			name:          "should handle invalid values",
+			shape:         nil,
+			shapeData:     nil,
+			expected:      nil,
+			expectedError: errors.New(ErrInvalidInput),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := app.BuildShape(tt.shape, tt.shapeData)
+			assert.Equal(tt.expectedError, err, tt.name)
+			assert.Equal(tt.expected, got, tt.name)
+		})
+	}
+}
 
-func assertEquals(t testing.TB, expected interface{}, got interface{}) {
-	t.Helper()
-	if expected != got {
-		t.Errorf("\nexpected `%v` \ngot `%v`", expected, got)
+func TestApp_PerformShapeAction(t *testing.T) {
+	assert := assert.New(t)
+	app := NewApp()
+	tests := []struct {
+		name          string
+		shape         shapes.Shape
+		action        string
+		expected      float64
+		expectedError error
+	}{
+		{
+			name: "should return area",
+			shape: shapes.Rectangle{
+				2,
+				2,
+			},
+			action:        "Area",
+			expected:      4,
+			expectedError: nil,
+		},
+		{
+			name: "should return perimeter",
+			shape: shapes.Rectangle{
+				1,
+				1,
+			},
+			action:        "Perimeter",
+			expected:      4,
+			expectedError: nil,
+		},
+		{
+			name: "should handle invalid input",
+			shape: shapes.Rectangle{
+				2,
+				2,
+			},
+			action:        "Invalid action",
+			expected:      0,
+			expectedError: errors.New(ErrInvalidInput),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := app.PerformShapeAction(tt.shape, tt.action)
+			assert.Equal(tt.expectedError, err, tt.name)
+			assert.Equal(tt.expected, got, tt.name)
+		})
+	}
+}
+
+func TestApp_GetFields(t *testing.T) {
+	assert := assert.New(t)
+	app := NewApp()
+	tests := []struct {
+		name     string
+		input    interface{}
+		expected []string
+	}{
+		{
+			name:     "test with struct",
+			input:    shapes.Rectangle{},
+			expected: []string{"Height", "Width"},
+		},
+		{
+			name:     "test with empty struct",
+			input:    struct{}{},
+			expected: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := app.GetFields(tt.input)
+			assert.Equal(tt.expected, result, tt.name)
+		})
 	}
 }
