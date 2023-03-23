@@ -113,6 +113,15 @@ func TestCustomPrompter_GetUserData(t *testing.T) {
 	}
 }
 
+//type mockPromptuiPrompter struct {
+//	ReadStringFunc func(delim byte) (string, error)
+//}
+//
+//func (r *mockReader) ReadString(delim byte) (string, error) {
+//	return r.ReadStringFunc(delim)
+//}
+//
+//
 //func TestPromptuiPrompter_GetUserChoice(t *testing.T) {
 //	assert := assert.New(t)
 //	prompter := NewPromptuiPrompter()
