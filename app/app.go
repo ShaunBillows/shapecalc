@@ -1,12 +1,10 @@
 package app
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"github.com/ShaunBillows/shapes-cli-project-go/app/shapes"
 	"log"
-	"os"
 	"strconv"
 )
 
@@ -15,14 +13,19 @@ const (
 	ErrReadingInput = "An error occurred while reading input"
 )
 
+type Prompter interface {
+	GetUserChoice(question string, options []string) (string, error)
+	GetUserData(data string) (string, error)
+}
+
 type App struct {
-	Reader StringReader
+	Prompter Prompter
 }
 
 func NewApp() *App {
-	reader := bufio.NewReader(os.Stdin)
+	prompter := NewPromptuiPrompter()
 	return &App{
-		Reader: reader,
+		Prompter: prompter,
 	}
 }
 
@@ -49,7 +52,10 @@ func (a *App) Run() {
 	// Prompt the user for a shape and shape action
 	for i, p := range prompts {
 		for {
-			response, err := a.GetUserChoice(p.prompt, p.options)
+			response, err := a.Prompter.GetUserChoice(p.prompt, p.options)
+			fmt.Println("res")
+			fmt.Println(response)
+
 			if response != "" {
 				prompts[i].response = response
 				break
@@ -70,7 +76,7 @@ func (a *App) Run() {
 	params := a.GetFields(shapeSelected)
 	paramValues := ShapeData{}
 	for _, param := range params {
-		paramStr, err := a.GetUserData(param)
+		paramStr, err := a.Prompter.GetUserData(param)
 		if err != nil {
 			log.Fatal(err)
 		}
