@@ -18,8 +18,8 @@ func (r *mockReader) ReadString(delim byte) (string, error) {
 func TestCustomPrompter_GetUserChoice(t *testing.T) {
 	assert := assert.New(t)
 	mr := &mockReader{}
-	app := NewCustomPrompter()
-	app.Reader = mr
+	prompter := NewCustomPrompter()
+	prompter.Reader = mr
 	tests := []struct {
 		name          string
 		readerInput   string
@@ -58,7 +58,7 @@ func TestCustomPrompter_GetUserChoice(t *testing.T) {
 			mr.ReadStringFunc = func(delim byte) (string, error) {
 				return tt.readerInput, tt.readerError
 			}
-			got, err := app.GetUserChoice(tt.readerInput, tt.readerOptions)
+			got, err := prompter.GetUserChoice(tt.readerInput, tt.readerOptions)
 			if err != nil {
 				assert.Equal(tt.expectedError.Error(), err.Error(), tt.name)
 			}
@@ -72,8 +72,8 @@ func TestCustomPrompter_GetUserChoice(t *testing.T) {
 func TestCustomPrompter_GetUserData(t *testing.T) {
 	assert := assert.New(t)
 	mr := &mockReader{}
-	app := NewCustomPrompter()
-	app.Reader = mr
+	prompter := NewCustomPrompter()
+	prompter.Reader = mr
 	tests := []struct {
 		name          string
 		readerInput   string
@@ -102,7 +102,7 @@ func TestCustomPrompter_GetUserData(t *testing.T) {
 			mr.ReadStringFunc = func(delim byte) (string, error) {
 				return tt.readerInput, tt.readerError
 			}
-			got, err := app.GetUserData(tt.readerData)
+			got, err := prompter.GetUserData(tt.readerData)
 			if err != nil {
 				assert.Equal(tt.expectedError.Error(), err.Error(), tt.name)
 			}
@@ -113,49 +113,105 @@ func TestCustomPrompter_GetUserData(t *testing.T) {
 	}
 }
 
-//type mockPromptuiPrompter struct {
-//	ReadStringFunc func(delim byte) (string, error)
-//}
-//
-//func (r *mockReader) ReadString(delim byte) (string, error) {
-//	return r.ReadStringFunc(delim)
-//}
-//
-//
-//func TestPromptuiPrompter_GetUserChoice(t *testing.T) {
-//	assert := assert.New(t)
-//	prompter := NewPromptuiPrompter()
-//	tests := []struct {
-//		name          string
-//		input         string
-//		options       []string
-//		expected      string
-//		expectedError error
-//	}{
-//		{
-//			name:          "should return the user's input",
-//			input:         "1",
-//			options:       []string{"Red", "Green", "Blue"},
-//			expected:      "test",
-//			expectedError: nil,
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			got, err := prompter.GetUserChoice(tt.input, tt.options)
-//			if err != nil {
-//				assert.Equal(tt.expectedError.Error(), err.Error(), tt.name)
-//			}
-//			if err == nil {
-//				assert.Equal(tt.expected, got, tt.name)
-//			}
-//		})
-//	}
-//}
+type MockPromptuiReader struct {
+	SelectFunc func(question string, options []string) (int, string, error)
+	PromptFunc func(data string) (string, error)
+}
+
+func (p *MockPromptuiReader) Prompt(data string) (string, error) {
+	return p.PromptFunc(data)
+}
+
+func (p *MockPromptuiReader) Select(question string, options []string) (int, string, error) {
+	return p.SelectFunc(question, options)
+}
+
+func TestPromptuiPrompter_GetUserChoice(t *testing.T) {
+	assert := assert.New(t)
+	mr := &MockPromptuiReader{}
+	prompter := NewPromptuiPrompter()
+	prompter.Reader = mr
+	tests := []struct {
+		name          string
+		readerInput   string
+		readerOptions []string
+		expected      string
+		expectedError error
+	}{
+		{
+			name:          "should return the user's input",
+			readerInput:   "1",
+			readerOptions: []string{"Red", "Green", "Blue"},
+			expected:      "Red",
+			expectedError: nil,
+		},
+		{
+			name:          "should handle invalid input",
+			readerInput:   "4",
+			readerOptions: []string{"Red", "Green", "Blue"},
+			expected:      "",
+			expectedError: errors.New(ErrInvalidInput),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mr.SelectFunc = func(question string, options []string) (int, string, error) {
+				return 0, tt.expected, tt.expectedError
+			}
+			got, err := prompter.GetUserChoice(tt.readerInput, tt.readerOptions)
+			if err != nil {
+				assert.Equal(tt.expectedError.Error(), err.Error(), tt.name)
+			}
+			if err == nil {
+				assert.Equal(tt.expected, got, tt.name)
+			}
+		})
+	}
+}
+
+func TestPromptuiPrompter_GetUserData(t *testing.T) {
+	assert := assert.New(t)
+	mr := &MockPromptuiReader{}
+	prompter := NewPromptuiPrompter()
+	prompter.Reader = mr
+	tests := []struct {
+		name          string
+		readerInput   string
+		expected      string
+		expectedError error
+	}{
+		{
+			name:          "should return the user's input",
+			readerInput:   "4",
+			expected:      "4",
+			expectedError: nil,
+		},
+		{
+			name:          "should handle reader errors",
+			readerInput:   "4",
+			expected:      "",
+			expectedError: errors.New(ErrInvalidInput),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mr.PromptFunc = func(data string) (string, error) {
+				return tt.expected, tt.expectedError
+			}
+			got, err := prompter.GetUserData(tt.readerInput)
+			if err != nil {
+				assert.Equal(tt.expectedError.Error(), err.Error(), tt.name)
+			}
+			if err == nil {
+				assert.Equal(tt.expected, got, tt.name)
+			}
+		})
+	}
+}
 
 func TestApp_CreateShape(t *testing.T) {
 	assert := assert.New(t)
-	app := NewApp()
+	app := NewApp("custom")
 	tests := []struct {
 		name          string
 		shape         string
@@ -198,7 +254,7 @@ func TestApp_CreateShape(t *testing.T) {
 
 func TestApp_BuildShape(t *testing.T) {
 	assert := assert.New(t)
-	app := NewApp()
+	app := NewApp("custom")
 	tests := []struct {
 		name          string
 		shape         shapes.Shape
@@ -262,7 +318,7 @@ func TestApp_BuildShape(t *testing.T) {
 
 func TestApp_PerformShapeAction(t *testing.T) {
 	assert := assert.New(t)
-	app := NewApp()
+	app := NewApp("custom")
 	tests := []struct {
 		name          string
 		shape         shapes.Shape
@@ -312,7 +368,7 @@ func TestApp_PerformShapeAction(t *testing.T) {
 
 func TestApp_GetFields(t *testing.T) {
 	assert := assert.New(t)
-	app := NewApp()
+	app := NewApp("custom")
 	tests := []struct {
 		name     string
 		input    interface{}

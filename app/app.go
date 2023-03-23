@@ -22,8 +22,15 @@ type App struct {
 	Prompter Prompter
 }
 
-func NewApp() *App {
-	prompter := NewPromptuiPrompter()
+func NewApp(prompterType string) *App {
+	var prompter Prompter
+	if prompterType == "custom" {
+		prompter = NewCustomPrompter()
+	} else if prompterType == "promptui" {
+		prompter = NewPromptuiPrompter()
+	} else {
+		log.Fatal("Invalid prompter configuration.")
+	}
 	return &App{
 		Prompter: prompter,
 	}
@@ -53,8 +60,6 @@ func (a *App) Run() {
 	for i, p := range prompts {
 		for {
 			response, err := a.Prompter.GetUserChoice(p.prompt, p.options)
-			fmt.Println("res")
-			fmt.Println(response)
 
 			if response != "" {
 				prompts[i].response = response
