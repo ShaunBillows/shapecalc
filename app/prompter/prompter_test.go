@@ -36,7 +36,7 @@ func TestCustomPrompter_GetUserChoice(t *testing.T) {
 			expectedError: nil,
 		},
 		{
-			name:          "invalid option should return an error",
+			name:          "should handle invalid input",
 			readerInput:   "100",
 			readerOptions: []string{"1", "2", "3"},
 			readerError:   nil,

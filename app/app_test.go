@@ -173,12 +173,12 @@ func TestApp_GetFields(t *testing.T) {
 		expected []string
 	}{
 		{
-			name:     "test with struct",
+			name:     "should return struct fields",
 			input:    shapes.Rectangle{},
 			expected: []string{"Height", "Width"},
 		},
 		{
-			name:     "test with empty struct",
+			name:     "empty struct should return nil",
 			input:    struct{}{},
 			expected: nil,
 		},
