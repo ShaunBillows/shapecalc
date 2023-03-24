@@ -3,7 +3,7 @@ package app
 import (
 	"errors"
 	"fmt"
-	prompter2 "github.com/ShaunBillows/shapes-cli-project-go/app/prompter"
+	"github.com/ShaunBillows/shapes-cli-project-go/app/prompter"
 	"github.com/ShaunBillows/shapes-cli-project-go/app/shapes"
 	"log"
 	"strconv"
@@ -23,16 +23,16 @@ type App struct {
 }
 
 func NewApp(prompterType string) *App {
-	var prompter Prompter
+	var myPrompter Prompter
 	if prompterType == "custom" {
-		prompter = prompter2.NewCustomPrompter()
+		myPrompter = prompter.NewCustomPrompter()
 	} else if prompterType == "promptui" {
-		prompter = prompter2.NewPromptuiPrompter()
+		myPrompter = prompter.NewPromptuiPrompter()
 	} else {
-		log.Fatal("Invalid prompter configuration.")
+		log.Fatal("Invalid myPrompter configuration.")
 	}
 	return &App{
-		Prompter: prompter,
+		Prompter: myPrompter,
 	}
 }
 
