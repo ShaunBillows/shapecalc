@@ -81,16 +81,21 @@ func (a *App) Run() {
 	params := a.GetFields(shapeSelected)
 	paramValues := ShapeData{}
 	for _, param := range params {
-		paramStr, err := a.Prompter.GetUserData(param)
-		if err != nil {
-			log.Fatal(err)
+		for {
+			paramStr, err := a.Prompter.GetUserData(param)
+			if err != nil {
+				fmt.Println("An error occurred with the input reader.")
+				log.Fatal(err)
+			}
+			paramValue, err := strconv.ParseFloat(paramStr, 64)
+			if err != nil {
+				fmt.Println("Invalid input. You must enter a number.")
+			}
+			if err == nil {
+				paramValues[param] = paramValue
+				break
+			}
 		}
-		paramValue, err := strconv.ParseFloat(paramStr, 64)
-		if err != nil {
-			fmt.Println("Invalid input. You must enter a number.")
-			log.Fatal(err)
-		}
-		paramValues[param] = paramValue
 	}
 	var selectedShape shapes.Shape
 	// Set the user's shape dimensions
