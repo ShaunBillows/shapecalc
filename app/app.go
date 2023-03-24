@@ -3,6 +3,7 @@ package app
 import (
 	"errors"
 	"fmt"
+	prompter2 "github.com/ShaunBillows/shapes-cli-project-go/app/prompter"
 	"github.com/ShaunBillows/shapes-cli-project-go/app/shapes"
 	"log"
 	"strconv"
@@ -10,7 +11,6 @@ import (
 
 const (
 	ErrInvalidInput = "Invalid input. Please try again."
-	ErrReadingInput = "An error occurred while reading input"
 )
 
 type Prompter interface {
@@ -25,9 +25,9 @@ type App struct {
 func NewApp(prompterType string) *App {
 	var prompter Prompter
 	if prompterType == "custom" {
-		prompter = NewCustomPrompter()
+		prompter = prompter2.NewCustomPrompter()
 	} else if prompterType == "promptui" {
-		prompter = NewPromptuiPrompter()
+		prompter = prompter2.NewPromptuiPrompter()
 	} else {
 		log.Fatal("Invalid prompter configuration.")
 	}
