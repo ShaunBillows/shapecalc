@@ -9,7 +9,7 @@ import (
 
 func TestApp_CreateShape(t *testing.T) {
 	assert := assert.New(t)
-	app := NewApp("custom")
+	app := NewApp()
 	tests := []struct {
 		name          string
 		shape         string
@@ -52,7 +52,7 @@ func TestApp_CreateShape(t *testing.T) {
 
 func TestApp_BuildShape(t *testing.T) {
 	assert := assert.New(t)
-	app := NewApp("custom")
+	app := NewApp()
 	tests := []struct {
 		name          string
 		shape         shapes.Shape
@@ -116,7 +116,7 @@ func TestApp_BuildShape(t *testing.T) {
 
 func TestApp_PerformShapeAction(t *testing.T) {
 	assert := assert.New(t)
-	app := NewApp("custom")
+	app := NewApp()
 	tests := []struct {
 		name          string
 		shape         shapes.Shape
@@ -166,7 +166,7 @@ func TestApp_PerformShapeAction(t *testing.T) {
 
 func TestApp_GetFields(t *testing.T) {
 	assert := assert.New(t)
-	app := NewApp("custom")
+	app := NewApp()
 	tests := []struct {
 		name     string
 		input    interface{}

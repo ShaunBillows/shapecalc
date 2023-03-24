@@ -22,15 +22,8 @@ type App struct {
 	Prompter Prompter
 }
 
-func NewApp(prompterType string) *App {
-	var myPrompter Prompter
-	if prompterType == "custom" {
-		myPrompter = prompter.NewCustomPrompter()
-	} else if prompterType == "promptui" {
-		myPrompter = prompter.NewPromptuiPrompter()
-	} else {
-		log.Fatal("Invalid myPrompter configuration.")
-	}
+func NewApp() *App {
+	myPrompter := prompter.NewCustomPrompter()
 	return &App{
 		Prompter: myPrompter,
 	}
@@ -77,7 +70,7 @@ func (a *App) Run() {
 		log.Fatal(err)
 	}
 	// Prompt the user for the shape's dimensions
-	fmt.Print("\nEnter the dimensions below.\n\n")
+	fmt.Print("\nEnter the shape's dimensions:\n\n")
 	params := a.GetFields(shapeSelected)
 	paramValues := ShapeData{}
 	for _, param := range params {
