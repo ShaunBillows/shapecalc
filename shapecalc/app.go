@@ -7,6 +7,7 @@ import (
 	"github.com/ShaunBillows/shapes-cli-project-go/shapecalc/shapes"
 	"log"
 	"strconv"
+	"reflect"
 )
 
 const (
@@ -157,6 +158,19 @@ func (a *App) PerformShapeAction(s shapes.Shape, action string) (float64, error)
 	default:
 		return 0, errors.New(ErrInvalidInput)
 	}
+}
+
+func (a *App) GetFields(s interface{}) []string {
+	v := reflect.ValueOf(s)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	t := v.Type()
+	var fields []string
+	for i := 0; i < t.NumField(); i++ {
+		fields = append(fields, t.Field(i).Name)
+	}
+	return fields
 }
 
 type ShapeData map[string]float64
