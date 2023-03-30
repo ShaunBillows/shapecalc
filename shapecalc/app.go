@@ -1,10 +1,10 @@
-package app
+package shapecalc
 
 import (
 	"errors"
 	"fmt"
-	"github.com/ShaunBillows/shapes-cli-project-go/app/prompter"
-	"github.com/ShaunBillows/shapes-cli-project-go/app/shapes"
+	"github.com/ShaunBillows/shapes-cli-project-go/shapecalc/prompter"
+	"github.com/ShaunBillows/shapes-cli-project-go/shapecalc/shapes"
 	"log"
 	"strconv"
 )

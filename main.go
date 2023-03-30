@@ -1,11 +1,10 @@
 package main
 
 import (
-	"github.com/ShaunBillows/shapes-cli-project-go/app"
+	"github.com/ShaunBillows/shapes-cli-project-go/shapecalc"
 )
 
 func main() {
-
-	_app := app.NewApp()
-	_app.Run()
+	app := shapecalc.NewApp()
+	app.Run()
 }
